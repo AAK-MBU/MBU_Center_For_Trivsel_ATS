@@ -66,7 +66,8 @@ with RPA_CONN:
 
     RPA_EMAIL_NO_REPLY = RPA_CONN.get_constant("e-mail_noreply").get("value", "")
 
-    SMTP_SERVER = RPA_CONN.get_constant("smtp_server").get("value", "")
+    SMTP_SERVER = "smtp.adm.aarhuskommune.dk"
+    # SMTP_SERVER = RPA_CONN.get_constant("smtp_server").get("value", "")
     SMTP_PORT = RPA_CONN.get_constant("smtp_port").get("value", "")
 
     # CENTER_FOR_TRIVSEL_MAIL = RPA_CONN.get_constant("center_for_trivsel_mail")
