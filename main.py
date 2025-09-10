@@ -250,7 +250,7 @@ async def process_workqueue(workqueue: Workqueue):
 
                 item.fail(str(e))
 
-                traceback.print_exc() 
+                traceback.print_exc()
 
 
 if __name__ == "__main__":
