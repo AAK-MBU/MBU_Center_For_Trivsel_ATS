@@ -53,7 +53,7 @@ ATS_URL = os.getenv("ATS_URL")
 ATS_TOKEN = os.getenv("ATS_TOKEN")
 
 DB_CONN_STRING = os.getenv("DBConnectionStringProd")
-# DB_CONN_STRING = os.getenv("DbConnectionStringDev")  # UNCOMMENT FOR DEV TESTING
+# DB_CONN_STRING = os.getenv("DbConnectionString")  # UNCOMMENT FOR DEV TESTING
 
 # TEMPORARY OVERRIDE: Set a new env variable in memory only
 os.environ["DbConnectionString"] = os.getenv("DBConnectionStringProd")
@@ -232,6 +232,14 @@ async def process_workqueue(workqueue: Workqueue):
             email_receiver = data.get("email_receiver", "")
 
             email_body = data.get("email_body", "")
+
+            print(f"RPA_EMAIL_NO_REPLY sender: {RPA_EMAIL_NO_REPLY}")
+            print(f"Sending email to: {email_receiver}")
+            print(f"Email body:\n{email_body}")
+            print("-----")
+            print(f"smtp_server: {SMTP_SERVER}, smtp_port: {SMTP_PORT}")
+
+            sys.exit()
 
             try:
                 smtp_util.send_email(
