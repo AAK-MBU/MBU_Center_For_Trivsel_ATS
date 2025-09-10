@@ -1,12 +1,23 @@
 [project]
-name = "process-template"
-version = "0.2.0"
+name = "mbu_center_for_trivsel_Ats"
+version = "1.0.0"
 description = "Add your description here"
 readme = "README.md"
 requires-python = ">=3.13"
 dependencies = [
     "automation-server-client",
     "mbu-dev-shared-components>=3.0.0",
+    "itk-dev-shared-components == 2.9.0",
+    "requests_ntlm >= 1.2.0",
+    "Pillow == 10.*",
+    "openpyxl >= 3.1.2",
+    "pyodbc >= 5.1.0",
+    "python-dateutil == 2.9.*",
+    "cryptography >= 43.0.0",
+    "office365-rest-python-client",
+    "pandas >= 2.2.3",
+    "sqlalchemy >= 2.0.20",
+    "sqlalchemy[asyncio] >= 2.0.20",
 ]
 
 [tool.uv.sources]

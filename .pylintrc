@@ -1,0 +1,14 @@
+[pylint.messages_control]
+disable = 
+  C0301, # Line too long
+  I1101, E1101, # C-modules members
+  R0913, # Too many arguments
+  R0914, # Too many local variables
+  R0917, # Too many positional arguments
+  W0612, # Unused variable
+  W0611, # Unused import
+  W0718, # too general exception
+  W0719, # too general exception
+  R0915, # Too many statements
+  R1702, # Too many nested blocks
+  R0912, # Too many branches
