@@ -21,10 +21,9 @@ from automation_server_client import AutomationServer, Workqueue
 from mbu_dev_shared_components.msoffice365.sharepoint_api.files import Sharepoint
 from mbu_dev_shared_components.database.connection import RPAConnection
 
-from itk_dev_shared_components.smtp import smtp_util
-
 from sub_processes import helper_functions
 from sub_processes import formular_mappings
+from sub_processes import smtp_util
 from sub_processes.montly_excel_update import montly_update_excel_file
 
 

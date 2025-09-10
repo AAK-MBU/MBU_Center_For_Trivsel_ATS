@@ -2,8 +2,6 @@
 Script to perform the monthly update of the Excel files with new submissions.
 """
 
-import os
-
 from io import BytesIO
 
 import pandas as pd
