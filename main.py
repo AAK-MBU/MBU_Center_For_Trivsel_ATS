@@ -66,8 +66,7 @@ with RPA_CONN:
 
     RPA_EMAIL_NO_REPLY = RPA_CONN.get_constant("e-mail_noreply").get("value", "")
 
-    SMTP_SERVER = "smtp.adm.aarhuskommune.dk"
-    # SMTP_SERVER = RPA_CONN.get_constant("smtp_server").get("value", "")
+    SMTP_SERVER = RPA_CONN.get_constant("smtp_adm_server").get("value", "")
     SMTP_PORT = RPA_CONN.get_constant("smtp_port").get("value", "")
 
     # CENTER_FOR_TRIVSEL_MAIL = RPA_CONN.get_constant("center_for_trivsel_mail")
@@ -233,12 +232,6 @@ async def process_workqueue(workqueue: Workqueue):
             email_receiver = data.get("email_receiver", "")
 
             email_body = data.get("email_body", "")
-
-            print(f"Sending email to: {email_receiver}")
-            print(f"RPA_EMAIL_NO_REPLY sender: {RPA_EMAIL_NO_REPLY}")
-            print(f"Email body:\n{email_body}")
-            print("-----")
-            print(f"smtp_server: {SMTP_SERVER}, smtp_port: {SMTP_PORT}")
 
             try:
                 smtp_util.send_email(
