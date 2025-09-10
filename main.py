@@ -52,7 +52,10 @@ load_dotenv()
 ATS_URL = os.getenv("ATS_URL")
 ATS_TOKEN = os.getenv("ATS_TOKEN")
 
-DB_CONN_STRING = os.getenv("DbConnectionString")
+DB_CONN_STRING = os.getenv("DBConnectionStringProd")
+
+# TEMPORARY OVERRIDE: Set a new env variable in memory only
+os.environ["DbConnectionString"] = os.getenv("DBConnectionStringProd")
 
 RPA_CONN = RPAConnection(db_env="PROD", commit=False)
 with RPA_CONN:
