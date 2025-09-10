@@ -233,13 +233,11 @@ async def process_workqueue(workqueue: Workqueue):
 
             email_body = data.get("email_body", "")
 
-            print(f"RPA_EMAIL_NO_REPLY sender: {RPA_EMAIL_NO_REPLY}")
             print(f"Sending email to: {email_receiver}")
+            print(f"RPA_EMAIL_NO_REPLY sender: {RPA_EMAIL_NO_REPLY}")
             print(f"Email body:\n{email_body}")
             print("-----")
             print(f"smtp_server: {SMTP_SERVER}, smtp_port: {SMTP_PORT}")
-
-            sys.exit()
 
             try:
                 smtp_util.send_email(
@@ -258,14 +256,7 @@ async def process_workqueue(workqueue: Workqueue):
 
                 item.fail(str(e))
 
-                traceback.print_exc()
-
-            # except Exception as e:
-            #     print("❌ Failed to send email")
-
-            #     print(f"➡️ Error: {e}")
-
-            #     traceback.print_exc()
+                traceback.print_exc() 
 
 
 if __name__ == "__main__":

@@ -29,10 +29,15 @@ def send_email(receiver: str | list[str], sender: str, subject: str, body: str, 
         html_body: Wether the body is html or just plain text. Defaults to False.
         attachments: A list of Attachment objects. Defaults to None.
     """
+
+    print("just before EmailMessage call")
+
     msg = EmailMessage()
     msg['to'] = receiver
     msg['from'] = sender
     msg['subject'] = subject
+
+    print("just before set content call")
 
     # Set body
     if html_body:
@@ -41,6 +46,8 @@ def send_email(receiver: str | list[str], sender: str, subject: str, body: str, 
     else:
         msg.set_content(body)
 
+    print("just before attachmentscall")
+
     # Attach files
     if attachments:
         for attachment in attachments:
@@ -48,6 +55,8 @@ def send_email(receiver: str | list[str], sender: str, subject: str, body: str, 
             main, sub = mime.split("/") if mime else ("application", "octet-stream")
             attachment.file.seek(0)
             msg.add_attachment(attachment.file.read(), maintype=main, subtype=sub, filename=attachment.file_name)
+
+    print("just before with smtplib call")
 
     # Send message
     with smtplib.SMTP(smtp_server, smtp_port) as smtp:
