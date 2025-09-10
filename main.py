@@ -52,7 +52,8 @@ load_dotenv()
 ATS_URL = os.getenv("ATS_URL")
 ATS_TOKEN = os.getenv("ATS_TOKEN")
 
-DB_CONN_STRING = os.getenv("DbConnectionString")
+DB_CONN_STRING = os.getenv("DbConnectionStringProd")
+# DB_CONN_STRING = os.getenv("DbConnectionStringDev")  # UNCOMMENT FOR DEV TESTING
 
 # TEMPORARY OVERRIDE: Set a new env variable in memory only
 os.environ["DbConnectionString"] = os.getenv("DBConnectionStringProd")
