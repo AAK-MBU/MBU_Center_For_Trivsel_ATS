@@ -16,7 +16,7 @@ import pandas as pd
 
 from dotenv import load_dotenv
 
-from automation_server_client import AutomationServer, Workqueue
+from automation_server_client import AutomationServer, Workqueue, WorkItemError
 
 from mbu_dev_shared_components.msoffice365.sharepoint_api.files import Sharepoint
 from mbu_dev_shared_components.database.connection import RPAConnection
@@ -52,7 +52,7 @@ load_dotenv()
 ATS_URL = os.getenv("ATS_URL")
 ATS_TOKEN = os.getenv("ATS_TOKEN")
 
-DB_CONN_STRING = os.getenv("DBConnectionStringProd")
+DB_CONN_STRING = os.getenv("DbConnectionString")
 
 # TEMPORARY OVERRIDE: Set a new env variable in memory only
 os.environ["DbConnectionString"] = os.getenv("DBConnectionStringProd")
@@ -222,8 +222,6 @@ async def process_workqueue(workqueue: Workqueue):
 
     for item in workqueue:
         with item:
-            print("heloooo")
-
             reference = item.reference
 
             data = item.data
@@ -246,12 +244,19 @@ async def process_workqueue(workqueue: Workqueue):
                     attachments=None,
                 )
 
-            except Exception as e:
-                print("❌ Failed to send email")
+            except WorkItemError as e:
+                print(f"Error processing item: {data}. Error: {e}")
 
-                print(f"➡️ Error: {e}")
+                item.fail(str(e))
 
                 traceback.print_exc()
+
+            # except Exception as e:
+            #     print("❌ Failed to send email")
+
+            #     print(f"➡️ Error: {e}")
+
+            #     traceback.print_exc()
 
 
 if __name__ == "__main__":
