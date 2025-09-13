@@ -69,7 +69,7 @@ with RPA_CONN:
     SMTP_SERVER = RPA_CONN.get_constant("smtp_adm_server").get("value", "")
     SMTP_PORT = RPA_CONN.get_constant("smtp_port").get("value", "")
 
-    # CENTER_FOR_TRIVSEL_MAIL = RPA_CONN.get_constant("center_for_trivsel_mail")
+    CENTER_FOR_TRIVSEL_MAIL = RPA_CONN.get_constant("center_for_trivsel_mail")
 
 SHAREPOINT_FOLDER_URL = "https://aarhuskommune.sharepoint.com"
 
@@ -140,7 +140,8 @@ async def populate_queue(workqueue: Workqueue):
                 #     transformed_row["Tilkoblet email"] = approved_emails_dict[transformed_row["AZ-ident"].strip().lower()]
                 ### UNCOMMENT IN PRODUCTION ###
 
-                transformed_row["Tilkoblet email"] = "dadj@aarhus.dk"  # REMOVE IN PRODUCTION
+                transformed_row["Tilkoblet email"] = CENTER_FOR_TRIVSEL_MAIL
+                # transformed_row["Tilkoblet email"] = "dadj@aarhus.dk"  # REMOVE IN PRODUCTION
 
                 cpr = transformed_row["Barnets/Den unges CPR-nummer"]
 
@@ -261,6 +262,8 @@ if __name__ == "__main__":
     print(f"Workqueue: {center_for_trivsel_workqueue}\n")
 
     if "--queue" in sys.argv:
+        print("Populating workqueue...")
+
         asyncio.run(populate_queue(center_for_trivsel_workqueue))
 
         if datetime.date.today() == 1 or "--monthly-update" in sys.argv:
@@ -271,4 +274,6 @@ if __name__ == "__main__":
         sys.exit()
 
     else:
+        print("Processing workqueue...")
+
         asyncio.run(process_workqueue(center_for_trivsel_workqueue))
