@@ -27,33 +27,12 @@ from sub_processes import smtp_util
 from sub_processes.montly_excel_update import montly_update_excel_file
 
 
-### REMOVE IN PRODUCTION ###
-# import requests
-# import urllib3
-# urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
-
-# _old_request = requests.Session.request
-
-
-# def unsafe_request(self, *args, **kwargs):
-#     """
-#     TESTING PURPOSES ONLY - DISABLES SSL VERIFICATION FOR ALL REQUESTS
-#     """
-#     kwargs['verify'] = False
-#     return _old_request(self, *args, **kwargs)
-
-
-# requests.Session.request = unsafe_request
-### REMOVE IN PRODUCTION ###
-
-
 load_dotenv()
 
 ATS_URL = os.getenv("ATS_URL")
 ATS_TOKEN = os.getenv("ATS_TOKEN")
 
 DB_CONN_STRING = os.getenv("DBConnectionStringProd")
-# DB_CONN_STRING = os.getenv("DbConnectionString")  # UNCOMMENT FOR DEV TESTING
 
 # TEMPORARY OVERRIDE: Set a new env variable in memory only
 os.environ["DbConnectionString"] = os.getenv("DBConnectionStringProd")
@@ -141,7 +120,6 @@ async def populate_queue(workqueue: Workqueue):
                 ### UNCOMMENT IN PRODUCTION ###
 
                 transformed_row["Tilkoblet email"] = CENTER_FOR_TRIVSEL_MAIL
-                # transformed_row["Tilkoblet email"] = "dadj@aarhus.dk"  # REMOVE IN PRODUCTION
 
                 cpr = transformed_row["Barnets/Den unges CPR-nummer"]
 
