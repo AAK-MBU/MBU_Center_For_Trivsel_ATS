@@ -69,7 +69,7 @@ with RPA_CONN:
     SMTP_SERVER = RPA_CONN.get_constant("smtp_adm_server").get("value", "")
     SMTP_PORT = RPA_CONN.get_constant("smtp_port").get("value", "")
 
-    CENTER_FOR_TRIVSEL_MAIL = RPA_CONN.get_constant("center_for_trivsel_mail")
+    CENTER_FOR_TRIVSEL_MAIL = RPA_CONN.get_constant("center_for_trivsel_mail").get("value", "")
 
 SHAREPOINT_FOLDER_URL = "https://aarhuskommune.sharepoint.com"
 
