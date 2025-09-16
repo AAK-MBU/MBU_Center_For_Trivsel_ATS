@@ -64,7 +64,7 @@ with RPA_CONN:
     USERNAME = SCV_LOGIN.get("username", "")
     PASSWORD = SCV_LOGIN.get("decrypted_password", "")
 
-    RPA_EMAIL_NO_REPLY = RPA_CONN.get_constant("e-mail_noreply").get("value", "")
+    RPA_EMAIL_NO_REPLY = RPA_CONN.get_constant("E-mail").get("value", "")
 
     SMTP_SERVER = RPA_CONN.get_constant("smtp_adm_server").get("value", "")
     SMTP_PORT = RPA_CONN.get_constant("smtp_port").get("value", "")
