@@ -43,7 +43,7 @@ with RPA_CONN:
     USERNAME = SCV_LOGIN.get("username", "")
     PASSWORD = SCV_LOGIN.get("decrypted_password", "")
 
-    RPA_EMAIL_NO_REPLY = RPA_CONN.get_constant("E-mail").get("value", "")
+    RPA_EMAIL = RPA_CONN.get_constant("E-mail").get("value", "")
 
     SMTP_SERVER = RPA_CONN.get_constant("smtp_adm_server").get("value", "")
     SMTP_PORT = RPA_CONN.get_constant("smtp_port").get("value", "")
@@ -215,7 +215,21 @@ async def process_workqueue(workqueue: Workqueue):
             try:
                 smtp_util.send_email(
                     receiver=email_receiver,
-                    sender=RPA_EMAIL_NO_REPLY,
+                    sender=RPA_EMAIL,
+                    subject="Ny(e) ESQ besvarelse(r)",
+                    body=email_body,
+                    html_body=email_body,
+                    smtp_server=SMTP_SERVER,
+                    smtp_port=SMTP_PORT,
+                    attachments=None,
+                )
+
+                print(f"Email sent to {email_receiver} for item with reference: {reference}")
+                print(f"Email sender: {RPA_EMAIL}")
+
+                smtp_util.send_email(
+                    receiver="dadj@aarhus.dk",
+                    sender=RPA_EMAIL,
                     subject="Ny(e) ESQ besvarelse(r)",
                     body=email_body,
                     html_body=email_body,
