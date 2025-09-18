@@ -33,6 +33,7 @@ ATS_URL = os.getenv("ATS_URL")
 ATS_TOKEN = os.getenv("ATS_TOKEN")
 
 DB_CONN_STRING = os.getenv("DBConnectionStringProd")
+# DB_CONN_STRING = os.getenv("DBConnectionString")
 
 # TEMPORARY OVERRIDE: Set a new env variable in memory only
 os.environ["DbConnectionString"] = os.getenv("DBConnectionStringProd")
@@ -73,8 +74,10 @@ async def populate_queue(workqueue: Workqueue):
 
     forms_by_cpr = {}
 
+    # date_yesterday = pd.Timestamp("2025-09-11").date()  # Manual override for testing purposes only
     date_yesterday = (pd.Timestamp.now() - pd.Timedelta(days=1)).date()
     all_yesterdays_forms = helper_functions.get_forms_data(DB_CONN_STRING, OS2_WEBFORM_ID, target_date=date_yesterday)
+    print(f"Found {len(all_yesterdays_forms)} forms from {date_yesterday}.")
 
     ### UNCOMMENT IN PRODUCTION ###
     # approved_emails_bytes = SHAREPOINT_API.fetch_file_using_open_binary(
@@ -140,6 +143,8 @@ async def populate_queue(workqueue: Workqueue):
 
         for cpr, submissions in forms_by_cpr.items():
             sections = []
+
+            print(f"Preparing email for CPR: {cpr} with {len(submissions)} submissions.")
 
             for entry in submissions:
                 transformed_row = entry["transformed"]
