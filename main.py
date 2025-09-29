@@ -35,7 +35,7 @@ ATS_TOKEN = os.getenv("ATS_TOKEN")
 DB_CONN_STRING = os.getenv("DBCONNECTIONSTRINGPROD")
 
 # TEMPORARY OVERRIDE: Set a new env variable in memory only
-os.environ["DbConnectionString"] = os.getenv("DBCONNECTIONSTRINGPROD")
+os.environ["OpenOrchestratorKey"] = os.getenv("OPENORCHESTRATORKEY")
 
 RPA_CONN = RPAConnection(db_env="PROD", commit=False)
 with RPA_CONN:
