@@ -55,9 +55,7 @@ with RPA_CONN:
 
 OS2_WEBFORM_ID = "center_for_trivsel_esq_formular"
 
-FOLDER_NAME = "General"
-
-logger = logging.getLogger(__name__)
+FOLDER_NAME = "Generel"
 
 SHAREPOINT_KWARGS = {
     "tenant": os.getenv("TENANT"),
@@ -65,6 +63,8 @@ SHAREPOINT_KWARGS = {
     "thumbprint": os.getenv("APPREG_THUMBPRINT"),
     "cert_path": os.getenv("GRAPH_CERT_PEM"),
 }
+
+logger = logging.getLogger(__name__)
 
 try:
     SHAREPOINT_API = Sharepoint(
@@ -79,23 +79,6 @@ try:
 
 except Exception as e:
     logger.info(f"Error when trying to authenticate: {e}")
-
-
-# ╔══════════════════════════════════════════════╗
-# ║ 🔥 REMOVE BEFORE DEPLOYMENT (TEMP OVERRIDES) 🔥 ║
-# ╚══════════════════════════════════════════════╝
-# This block disables SSL verification and overrides env vars
-import requests
-import urllib3
-urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
-_old_request = requests.Session.request
-def unsafe_request(self, *args, **kwargs):
-    kwargs['verify'] = False
-    return _old_request(self, *args, **kwargs)
-requests.Session.request = unsafe_request
-# ╔══════════════════════════════════════════════╗
-# ║ 🔥 REMOVE BEFORE DEPLOYMENT (TEMP OVERRIDES) 🔥 ║
-# ╚══════════════════════════════════════════════╝
 
 
 async def populate_queue(workqueue: Workqueue):
@@ -288,7 +271,9 @@ if __name__ == "__main__":
 
     print(f"Workqueue: {center_for_trivsel_workqueue}\n")
 
-    if datetime.date.today() == 1 or "--monthly-update" in sys.argv:
+    print("heloooo")
+    print(sys.argv)
+    if datetime.date.today() == 1 or "--monthly_update" in sys.argv:
         print("Monthly update triggered (by date or flag).")
 
         montly_update_excel_file(sharepoint_api=SHAREPOINT_API, db_conn_string=DB_CONN_STRING, os2_webform_id=OS2_WEBFORM_ID, folder_name=FOLDER_NAME)

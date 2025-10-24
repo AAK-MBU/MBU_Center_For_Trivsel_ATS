@@ -69,7 +69,7 @@ def montly_update_excel_file(sharepoint_api: Sharepoint, db_conn_string: str, os
                     end_date=first_day_of_last_month
                 )
 
-            elif "--monthly-update" in sys.argv:
+            elif "--monthly_update" in sys.argv:
                 ranged_submissions = helper_functions.get_forms_data(
                     db_conn_string,
                     os2_webform_id,
