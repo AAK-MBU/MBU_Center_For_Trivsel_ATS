@@ -4,6 +4,7 @@ main.py
 
 import sys
 import os
+import logging
 
 import traceback
 import asyncio
@@ -18,8 +19,9 @@ from dotenv import load_dotenv
 
 from automation_server_client import AutomationServer, Workqueue, WorkItemError
 
-from mbu_dev_shared_components.msoffice365.sharepoint_api.files import Sharepoint
 from mbu_dev_shared_components.database.connection import RPAConnection
+
+from mbu_msoffice_integration.sharepoint_class import Sharepoint
 
 from sub_processes import helper_functions
 from sub_processes import formular_mappings
@@ -50,19 +52,50 @@ with RPA_CONN:
 
     CENTER_FOR_TRIVSEL_MAIL = RPA_CONN.get_constant("center_for_trivsel_mail").get("value", "")
 
-SHAREPOINT_FOLDER_URL = "https://aarhuskommune.sharepoint.com"
-
-SHAREPOINT_API = Sharepoint(
-    username=USERNAME,
-    password=PASSWORD,
-    site_url="https://aarhuskommune.sharepoint.com",
-    site_name="CenterforTrivsel",
-    document_library="Delte dokumenter"
-)
 
 OS2_WEBFORM_ID = "center_for_trivsel_esq_formular"
 
-FOLDER_NAME = "General/ESQ"
+FOLDER_NAME = "General"
+
+logger = logging.getLogger(__name__)
+
+SHAREPOINT_KWARGS = {
+    "tenant": os.getenv("TENANT"),
+    "client_id": os.getenv("CLIENT_ID"),
+    "thumbprint": os.getenv("APPREG_THUMBPRINT"),
+    "cert_path": os.getenv("GRAPH_CERT_PEM"),
+}
+
+try:
+    SHAREPOINT_API = Sharepoint(
+        tenant=SHAREPOINT_KWARGS["tenant"],
+        client_id=SHAREPOINT_KWARGS["client_id"],
+        thumbprint=SHAREPOINT_KWARGS["thumbprint"],
+        cert_path=SHAREPOINT_KWARGS["cert_path"],
+        site_url="https://aarhuskommune.sharepoint.com",
+        site_name="PPR-Samarbejdsprojekter-CenterforTrivsel",
+        document_library="Delte dokumenter",
+    )
+
+except Exception as e:
+    logger.info(f"Error when trying to authenticate: {e}")
+
+
+# ╔══════════════════════════════════════════════╗
+# ║ 🔥 REMOVE BEFORE DEPLOYMENT (TEMP OVERRIDES) 🔥 ║
+# ╚══════════════════════════════════════════════╝
+# This block disables SSL verification and overrides env vars
+import requests
+import urllib3
+urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
+_old_request = requests.Session.request
+def unsafe_request(self, *args, **kwargs):
+    kwargs['verify'] = False
+    return _old_request(self, *args, **kwargs)
+requests.Session.request = unsafe_request
+# ╔══════════════════════════════════════════════╗
+# ║ 🔥 REMOVE BEFORE DEPLOYMENT (TEMP OVERRIDES) 🔥 ║
+# ╚══════════════════════════════════════════════╝
 
 
 async def populate_queue(workqueue: Workqueue):
@@ -78,22 +111,20 @@ async def populate_queue(workqueue: Workqueue):
     all_yesterdays_forms = helper_functions.get_forms_data(DB_CONN_STRING, OS2_WEBFORM_ID, target_date=date_yesterday)
     print(f"Found {len(all_yesterdays_forms)} forms from {date_yesterday}.")
 
-    ### UNCOMMENT IN PRODUCTION ###
-    # approved_emails_bytes = SHAREPOINT_API.fetch_file_using_open_binary(
-    #     file_name="Godkendte emails.xlsx",
-    #     folder_name=FOLDER_NAME
-    # )
+    approved_emails_bytes = SHAREPOINT_API.fetch_file_using_open_binary(
+        file_name="Godkendte emails.xlsx",
+        folder_name=FOLDER_NAME
+    )
 
-    # approved_emails_df = pd.read_excel(BytesIO(approved_emails_bytes))
+    approved_emails_df = pd.read_excel(BytesIO(approved_emails_bytes))
 
-    # # Create dictionary {az-ident: email}, dropping NaNs and stripping/normalizing
-    # approved_emails_dict = dict(
-    #     zip(
-    #         approved_emails_df['az-ident'].dropna().str.strip(),
-    #         approved_emails_df['email'].dropna().str.strip().str.lower()
-    #     )
-    # )
-    ### UNCOMMENT IN PRODUCTION ###
+    # Create dictionary {az-ident: email}, dropping NaNs and stripping/normalizing
+    approved_emails_dict = dict(
+        zip(
+            approved_emails_df['az-ident'].dropna().str.strip(),
+            approved_emails_df['email'].dropna().str.strip().str.lower()
+        )
+    )
 
     if len(all_yesterdays_forms) > 0:
         for form in all_yesterdays_forms:
@@ -114,11 +145,11 @@ async def populate_queue(workqueue: Workqueue):
                 transformed_row = formular_mappings.transform_form_submission(serial, form, mapping)
 
                 ### UNCOMMENT IN PRODUCTION ###
-                # if transformed_row["AZ-ident"].strip() not in approved_emails_dict:
-                #     transformed_row["Tilkoblet email"] = CENTER_FOR_TRIVSEL_MAIL
+                if transformed_row["AZ-ident"].strip() not in approved_emails_dict:
+                    transformed_row["Tilkoblet email"] = CENTER_FOR_TRIVSEL_MAIL
 
-                # else:
-                #     transformed_row["Tilkoblet email"] = approved_emails_dict[transformed_row["AZ-ident"].strip().lower()]
+                else:
+                    transformed_row["Tilkoblet email"] = approved_emails_dict[transformed_row["AZ-ident"].strip().lower()]
                 ### UNCOMMENT IN PRODUCTION ###
 
                 transformed_row["Tilkoblet email"] = CENTER_FOR_TRIVSEL_MAIL
@@ -258,18 +289,16 @@ if __name__ == "__main__":
     print(f"Workqueue: {center_for_trivsel_workqueue}\n")
 
     if "--queue" in sys.argv:
+        if datetime.date.today() == 1 or "--monthly-update" in sys.argv:
+            montly_update_excel_file(sharepoint_api=SHAREPOINT_API, db_conn_string=DB_CONN_STRING, os2_webform_id=OS2_WEBFORM_ID, folder_name=FOLDER_NAME)
+
+            print("Monthly update triggered (by date or flag).")
+
         print("Populating workqueue...")
 
         asyncio.run(populate_queue(center_for_trivsel_workqueue))
 
-        if datetime.date.today() == 1 or "--monthly-update" in sys.argv:
-            asyncio.run(montly_update_excel_file(sharepoint_api=SHAREPOINT_API, db_conn_string=DB_CONN_STRING, os2_webform_id=OS2_WEBFORM_ID, folder_name=FOLDER_NAME))
-
-            print("Monthly update triggered (by date or flag).")
-
-        sys.exit()
-
-    else:
+    if "--process" in sys.argv:
         print("Processing workqueue...")
 
         asyncio.run(process_workqueue(center_for_trivsel_workqueue))
