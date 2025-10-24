@@ -288,11 +288,12 @@ if __name__ == "__main__":
 
     print(f"Workqueue: {center_for_trivsel_workqueue}\n")
 
-    if "--queue" in sys.argv:
-        if datetime.date.today() == 1 or "--monthly-update" in sys.argv:
-            montly_update_excel_file(sharepoint_api=SHAREPOINT_API, db_conn_string=DB_CONN_STRING, os2_webform_id=OS2_WEBFORM_ID, folder_name=FOLDER_NAME)
+    if datetime.date.today() == 1 or "--monthly-update" in sys.argv:
+        print("Monthly update triggered (by date or flag).")
 
-            print("Monthly update triggered (by date or flag).")
+        montly_update_excel_file(sharepoint_api=SHAREPOINT_API, db_conn_string=DB_CONN_STRING, os2_webform_id=OS2_WEBFORM_ID, folder_name=FOLDER_NAME)
+
+    if "--queue" in sys.argv:
 
         print("Populating workqueue...")
 
