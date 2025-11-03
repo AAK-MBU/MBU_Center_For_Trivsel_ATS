@@ -1,5 +1,6 @@
 """This module contains helper functions."""
 
+import logging
 import json
 import urllib.parse
 
@@ -8,6 +9,8 @@ import pandas as pd
 from sqlalchemy import create_engine
 
 from sub_processes import formular_mappings
+
+logger = logging.getLogger(__name__)
 
 
 def get_forms_data(
@@ -58,6 +61,8 @@ def get_forms_data(
             form_submitted_date DESC
     """
 
+    logger.info(f"Executing SQL query:\n{query}")
+
     # Create SQLAlchemy engine
     encoded_conn_str = urllib.parse.quote_plus(conn_string)
     engine = create_engine(f"mssql+pyodbc:///?odbc_connect={encoded_conn_str}")
@@ -66,12 +71,12 @@ def get_forms_data(
         df = pd.read_sql(sql=query, con=engine, params=query_params)
 
     except Exception as e:
-        print("Error during pd.read_sql:", e)
+        logger.info(f"Error during pd.read_sql: {e}")
 
         raise
 
     if df.empty:
-        print("No submissions found for the given date(s).")
+        logger.info("No submissions found for the given date(s).")
 
         return []
 
@@ -85,7 +90,7 @@ def get_forms_data(
                 extracted_data.append(parsed)
 
         except json.JSONDecodeError:
-            print("Invalid JSON in form_data, skipping row.")
+            logger.info("Invalid JSON in form_data, skipping row.")
 
     return extracted_data
 

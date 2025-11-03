@@ -12,3 +12,4 @@ disable =
   R0915, # Too many statements
   R1702, # Too many nested blocks
   R0912, # Too many branches
+  W1203, # Use lazy % formatting in logging functions

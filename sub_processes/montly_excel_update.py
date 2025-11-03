@@ -3,10 +3,9 @@ Script to perform the monthly update of the Excel files with new submissions.
 """
 
 import sys
+import logging
 
 from io import BytesIO
-
-import datetime
 
 import pandas as pd
 
@@ -17,16 +16,21 @@ from sub_processes import formular_mappings
 
 SHEET_NAME = "Besvarelser"
 
+logger = logging.getLogger(__name__)
+
 
 def montly_update_excel_file(sharepoint_api: Sharepoint, db_conn_string: str, os2_webform_id: str, folder_name: str):
     """Perform the monthly update of the Excel files with new submissions."""
 
     ranged_submissions = []
 
-    date_today = pd.Timestamp.now().date()
+    today = pd.Timestamp.now().date()
+    first_day_of_current_month = today.replace(day=1)
 
-    last_day_of_last_month = (pd.Timestamp(date_today.replace(day=1)) - pd.Timedelta(days=1)).date()
+    last_day_of_last_month = first_day_of_current_month - pd.Timedelta(days=1)
     first_day_of_last_month = last_day_of_last_month.replace(day=1)
+
+    logger.info(f"Updating Excel files for submissions from {first_day_of_last_month} to {last_day_of_last_month}.")
 
     unge_excel_file_name = "Center for trivsel - ESQ besvarelser fra unge.xlsx"
     foraeldre_excel_file_name = "Center for trivsel - ESQ besvarelser fra forældre.xlsx"
@@ -36,7 +40,7 @@ def montly_update_excel_file(sharepoint_api: Sharepoint, db_conn_string: str, os
 
     for excel_file_name in [unge_excel_file_name, foraeldre_excel_file_name]:
         if excel_file_name not in file_names:
-            print(f"Excel file '{excel_file_name}' not found - creating new.")
+            logger.info(f"Excel file '{excel_file_name}' not found - creating new.")
 
             # Fetch all submissions once for the whole period
             all_submissions = helper_functions.get_forms_data(
@@ -61,18 +65,20 @@ def montly_update_excel_file(sharepoint_api: Sharepoint, db_conn_string: str, os
             )
 
         else:
-            if datetime.date.today() == 1:
+            logger.info(f"Excel file '{excel_file_name}' found - appending new rows.")
+
+            if "--test" in sys.argv:
                 ranged_submissions = helper_functions.get_forms_data(
                     db_conn_string,
                     os2_webform_id,
-                    start_date=last_day_of_last_month,
-                    end_date=first_day_of_last_month
                 )
 
-            elif "--monthly_update" in sys.argv:
+            else:
                 ranged_submissions = helper_functions.get_forms_data(
                     db_conn_string,
                     os2_webform_id,
+                    start_date=first_day_of_last_month,
+                    end_date=last_day_of_last_month
                 )
 
             # Filter/transform for just this file
@@ -104,6 +110,3 @@ def montly_update_excel_file(sharepoint_api: Sharepoint, db_conn_string: str, os
             column_widths=100,
             freeze_panes="A2"
         )
-
-        print()
-        print()

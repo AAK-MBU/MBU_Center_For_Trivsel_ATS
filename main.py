@@ -23,6 +23,7 @@ from mbu_dev_shared_components.database.connection import RPAConnection
 
 from mbu_msoffice_integration.sharepoint_class import Sharepoint
 
+from sub_processes import ats_functions
 from sub_processes import helper_functions
 from sub_processes import formular_mappings
 from sub_processes import smtp_util
@@ -81,18 +82,36 @@ except Exception as e:
     logger.info(f"Error when trying to authenticate: {e}")
 
 
+
+# ╔══════════════════════════════════════════════╗
+# ║ 🔥 REMOVE BEFORE DEPLOYMENT (TEMP OVERRIDES) 🔥 ║
+# ╚══════════════════════════════════════════════╝
+### This block disables SSL verification and overrides env vars ###
+import requests
+import urllib3
+urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
+_old_request = requests.Session.request
+def unsafe_request(self, *args, **kwargs):
+    kwargs['verify'] = False
+    return _old_request(self, *args, **kwargs)
+requests.Session.request = unsafe_request
+# ╔══════════════════════════════════════════════╗
+# ║ 🔥 REMOVE BEFORE DEPLOYMENT (TEMP OVERRIDES) 🔥 ║
+# ╚══════════════════════════════════════════════╝
+
+
 async def populate_queue(workqueue: Workqueue):
     """Populate the workqueue with items to be processed."""
 
     # ALWAYS RUN DAILY EMAIL SUBMISSION FLOW
-    print("Running daily email submission flow.")
+    logger.info("Running daily email submission flow.")
 
     forms_by_cpr = {}
 
     # date_yesterday = pd.Timestamp("2025-09-11").date()  # Manual override for testing purposes only
     date_yesterday = (pd.Timestamp.now() - pd.Timedelta(days=1)).date()
     all_yesterdays_forms = helper_functions.get_forms_data(DB_CONN_STRING, OS2_WEBFORM_ID, target_date=date_yesterday)
-    print(f"Found {len(all_yesterdays_forms)} forms from {date_yesterday}.")
+    logger.info(f"Found {len(all_yesterdays_forms)} forms from {date_yesterday}.")
 
     approved_emails_bytes = SHAREPOINT_API.fetch_file_using_open_binary(
         file_name="Godkendte emails.xlsx",
@@ -150,14 +169,14 @@ async def populate_queue(workqueue: Workqueue):
                 })
 
             except Exception as e:
-                print(f"Error processing form: {e}")
+                logger.info(f"Error processing form: {e}")
 
                 continue
 
         for cpr, submissions in forms_by_cpr.items():
             sections = []
 
-            print(f"Preparing email for CPR: {cpr} with {len(submissions)} submissions.")
+            logger.info(f"Preparing email for CPR: {cpr} with {len(submissions)} submissions.")
 
             for entry in submissions:
                 transformed_row = entry["transformed"]
@@ -216,7 +235,7 @@ async def populate_queue(workqueue: Workqueue):
 async def process_workqueue(workqueue: Workqueue):
     """Process items from the workqueue."""
 
-    print("Processing workqueue items...")
+    logger.info("Processing workqueue items...")
 
     for item in workqueue:
         with item:
@@ -224,7 +243,7 @@ async def process_workqueue(workqueue: Workqueue):
 
             data = item.data
 
-            print(f"Processing item with reference: {reference}")
+            logger.info(f"Processing item with reference: {reference}")
 
             email_receiver = data.get("email_receiver", "")
 
@@ -242,8 +261,8 @@ async def process_workqueue(workqueue: Workqueue):
                     attachments=None,
                 )
 
-                print(f"Email sent to {email_receiver} for item with reference: {reference}")
-                print(f"Email sender: {RPA_EMAIL}")
+                logger.info(f"Email sent to {email_receiver} for item with reference: {reference}")
+                logger.info(f"Email sender: {RPA_EMAIL}")
 
                 smtp_util.send_email(
                     receiver="dadj@aarhus.dk",
@@ -257,7 +276,7 @@ async def process_workqueue(workqueue: Workqueue):
                 )
 
             except WorkItemError as e:
-                print(f"Error processing item: {data}. Error: {e}")
+                logger.info(f"Error processing item: {data}. Error: {e}")
 
                 item.fail(str(e))
 
@@ -265,26 +284,24 @@ async def process_workqueue(workqueue: Workqueue):
 
 
 if __name__ == "__main__":
+    ats_functions.init_logger()
+
     ats = AutomationServer.from_environment()
 
     center_for_trivsel_workqueue = ats.workqueue()
 
-    print(f"Workqueue: {center_for_trivsel_workqueue}\n")
-
-    print("heloooo")
-    print(sys.argv)
-    if datetime.date.today() == 1 or "--monthly_update" in sys.argv:
-        print("Monthly update triggered (by date or flag).")
+    if datetime.date.today().day == 1 or "--monthly_update" in sys.argv:
+        logger.info("Monthly update triggered (by date or flag).")
 
         montly_update_excel_file(sharepoint_api=SHAREPOINT_API, db_conn_string=DB_CONN_STRING, os2_webform_id=OS2_WEBFORM_ID, folder_name=FOLDER_NAME)
 
     if "--queue" in sys.argv:
 
-        print("Populating workqueue...")
+        logger.info("Populating workqueue...")
 
         asyncio.run(populate_queue(center_for_trivsel_workqueue))
 
     if "--process" in sys.argv:
-        print("Processing workqueue...")
+        logger.info("Processing workqueue...")
 
         asyncio.run(process_workqueue(center_for_trivsel_workqueue))
