@@ -82,19 +82,18 @@ except Exception as e:
     logger.info(f"Error when trying to authenticate: {e}")
 
 
-
 # ╔══════════════════════════════════════════════╗
 # ║ 🔥 REMOVE BEFORE DEPLOYMENT (TEMP OVERRIDES) 🔥 ║
 # ╚══════════════════════════════════════════════╝
 ### This block disables SSL verification and overrides env vars ###
-import requests
-import urllib3
-urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
-_old_request = requests.Session.request
-def unsafe_request(self, *args, **kwargs):
-    kwargs['verify'] = False
-    return _old_request(self, *args, **kwargs)
-requests.Session.request = unsafe_request
+# import requests
+# import urllib3
+# urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
+# _old_request = requests.Session.request
+# def unsafe_request(self, *args, **kwargs):
+#     kwargs['verify'] = False
+#     return _old_request(self, *args, **kwargs)
+# requests.Session.request = unsafe_request
 # ╔══════════════════════════════════════════════╗
 # ║ 🔥 REMOVE BEFORE DEPLOYMENT (TEMP OVERRIDES) 🔥 ║
 # ╚══════════════════════════════════════════════╝
@@ -123,7 +122,7 @@ async def populate_queue(workqueue: Workqueue):
     # Create dictionary {az-ident: email}, dropping NaNs and stripping/normalizing
     approved_emails_dict = dict(
         zip(
-            approved_emails_df['az-ident'].dropna().str.strip(),
+            approved_emails_df['az-ident'].dropna().str.strip().str.lower(),
             approved_emails_df['email'].dropna().str.strip().str.lower()
         )
     )
@@ -146,12 +145,14 @@ async def populate_queue(workqueue: Workqueue):
 
                 transformed_row = formular_mappings.transform_form_submission(serial, form, mapping)
 
+                az_ident = str(transformed_row["AZ-ident"]).strip().lower()
+
                 ### UNCOMMENT IN PRODUCTION ###
-                if str(transformed_row["AZ-ident"]).strip().lower() not in approved_emails_dict:
+                if az_ident not in approved_emails_dict:
                     transformed_row["Tilkoblet email"] = CENTER_FOR_TRIVSEL_MAIL
 
                 else:
-                    transformed_row["Tilkoblet email"] = approved_emails_dict[transformed_row["AZ-ident"].strip().lower()]
+                    transformed_row["Tilkoblet email"] = approved_emails_dict[az_ident]
                 ### UNCOMMENT IN PRODUCTION ###
 
                 logger.info(f"Tilkoblet email for AZ-ident {transformed_row['AZ-ident']}: {transformed_row['Tilkoblet email']}")
@@ -274,6 +275,9 @@ async def process_workqueue(workqueue: Workqueue):
                     smtp_port=SMTP_PORT,
                     attachments=None,
                 )
+
+                logger.info(f"Email also to 'dadj@aarhus.dk' for item with reference: {reference}")
+                logger.info(f"Email sender: {RPA_EMAIL}")
 
             except WorkItemError as e:
                 logger.info(f"Error processing item: {data}. Error: {e}")
