@@ -154,6 +154,8 @@ async def populate_queue(workqueue: Workqueue):
                     transformed_row["Tilkoblet email"] = approved_emails_dict[transformed_row["AZ-ident"].strip().lower()]
                 ### UNCOMMENT IN PRODUCTION ###
 
+                logger.info(f"Tilkoblet email for AZ-ident {transformed_row['AZ-ident']}: {transformed_row['Tilkoblet email']}")
+
                 cpr = transformed_row["Barnets/Den unges CPR-nummer"]
 
                 if cpr not in forms_by_cpr:
