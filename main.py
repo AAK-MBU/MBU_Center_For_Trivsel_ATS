@@ -147,14 +147,12 @@ async def populate_queue(workqueue: Workqueue):
                 transformed_row = formular_mappings.transform_form_submission(serial, form, mapping)
 
                 ### UNCOMMENT IN PRODUCTION ###
-                if transformed_row["AZ-ident"].strip() not in approved_emails_dict:
+                if str(transformed_row["AZ-ident"]).strip().lower() not in approved_emails_dict:
                     transformed_row["Tilkoblet email"] = CENTER_FOR_TRIVSEL_MAIL
 
                 else:
                     transformed_row["Tilkoblet email"] = approved_emails_dict[transformed_row["AZ-ident"].strip().lower()]
                 ### UNCOMMENT IN PRODUCTION ###
-
-                transformed_row["Tilkoblet email"] = CENTER_FOR_TRIVSEL_MAIL
 
                 cpr = transformed_row["Barnets/Den unges CPR-nummer"]
 
