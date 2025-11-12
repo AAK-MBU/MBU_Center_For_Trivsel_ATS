@@ -86,14 +86,14 @@ except Exception as e:
 # ║ 🔥 REMOVE BEFORE DEPLOYMENT (TEMP OVERRIDES) 🔥 ║
 # ╚══════════════════════════════════════════════╝
 ### This block disables SSL verification and overrides env vars ###
-# import requests
-# import urllib3
-# urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
-# _old_request = requests.Session.request
-# def unsafe_request(self, *args, **kwargs):
-#     kwargs['verify'] = False
-#     return _old_request(self, *args, **kwargs)
-# requests.Session.request = unsafe_request
+import requests
+import urllib3
+urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
+_old_request = requests.Session.request
+def unsafe_request(self, *args, **kwargs):
+    kwargs['verify'] = False
+    return _old_request(self, *args, **kwargs)
+requests.Session.request = unsafe_request
 # ╔══════════════════════════════════════════════╗
 # ║ 🔥 REMOVE BEFORE DEPLOYMENT (TEMP OVERRIDES) 🔥 ║
 # ╚══════════════════════════════════════════════╝
@@ -166,7 +166,8 @@ async def populate_queue(workqueue: Workqueue):
                     "form": form,
                     "transformed": transformed_row,
                     "role": udfylder_rolle,
-                    "mapping": mapping
+                    "mapping": mapping,
+                    "az_ident": az_ident
                 })
 
             except Exception as e:
@@ -183,6 +184,7 @@ async def populate_queue(workqueue: Workqueue):
                 transformed_row = entry["transformed"]
                 role = entry["role"]
                 mapping = entry["mapping"]
+                entry_az_ident = entry["az_ident"]
 
                 table_att = {
                     "Udfyldt": transformed_row["Gennemført"],
@@ -212,6 +214,10 @@ async def populate_queue(workqueue: Workqueue):
                 table_att["Average answer score"] = transformed_row["Average answer score"]
 
                 html_table = helper_functions.format_html_table(table_att)
+
+                sections.append(
+                    f"<p><strong>AZ-ident fra link til formular:</strong> {entry_az_ident}</p><br>"
+                )
 
                 sections.append(
                     f"<p><strong>Udfylder rolle:</strong> {role}</p><br>{html_table}<br><br>"
@@ -276,7 +282,7 @@ async def process_workqueue(workqueue: Workqueue):
                     attachments=None,
                 )
 
-                logger.info(f"Email also to 'dadj@aarhus.dk' for item with reference: {reference}")
+                logger.info(f"Email also sent to 'dadj@aarhus.dk' for item with reference: {reference}")
                 logger.info(f"Email sender: {RPA_EMAIL}")
 
             except WorkItemError as e:
